@@ -12,9 +12,7 @@ class ACLService
 
     protected $browser;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function createRole(ROLE_ENUM $roleEnum): Role
     {

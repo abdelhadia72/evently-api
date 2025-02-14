@@ -17,28 +17,45 @@ class UserSeeder extends Seeder
     {
 
         if (env('APP_ENV') === 'prod') {
+            // Admin user
             $admin = User::firstOrCreate(
-                ['email' => 'admin@cysc.fr'],
-                ['password' => bcrypt('fnFPB3TzGWTBoLA')],
+                ['email' => 'admin@evently.com'],
+                ['password' => bcrypt('fnFPB3TzGWTBoLA')]
             );
             $admin->assignRole(ROLE::ADMIN);
 
-            $user = User::firstOrCreate(
-                ['email' => 'user@cysc.fr'],
-                ['password' => bcrypt('nRapnRYRdxcE')],
+            // Organizer user
+            $organizer = User::firstOrCreate(
+                ['email' => 'organizer@evently.com'],
+                ['password' => bcrypt('organizer123')]
             );
-            $user->assignRole(ROLE::USER);
+            $organizer->assignRole(ROLE::ORGANIZER);
+
+            // Attendee user
+            $attendee = User::firstOrCreate(
+                ['email' => 'attendee@evently.com'],
+                ['password' => bcrypt('attendee123')]
+            );
+            $attendee->assignRole(ROLE::ATTENDEE);
         } else {
+            // Development environment users
             $admin = User::firstOrCreate(
-                ['email' => 'admin@cysc.fr'],
-                ['password' => bcrypt('admin')],
+                ['email' => 'admin@evently.com'],
+                ['password' => bcrypt('admin')]
             );
             $admin->assignRole(ROLE::ADMIN);
-            $user = User::firstOrCreate(
-                ['email' => 'user@cysc.fr'],
-                ['password' => bcrypt('user')],
+
+            $organizer = User::firstOrCreate(
+                ['email' => 'organizer@evently.com'],
+                ['password' => bcrypt('organizer')]
             );
-            $user->assignRole(ROLE::USER);
+            $organizer->assignRole(ROLE::ORGANIZER);
+
+            $attendee = User::firstOrCreate(
+                ['email' => 'attendee@evently.com'],
+                ['password' => bcrypt('attendee')]
+            );
+            $attendee->assignRole(ROLE::ATTENDEE);
         }
     }
 }

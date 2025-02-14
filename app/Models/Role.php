@@ -26,6 +26,8 @@ class Role extends BaseModel
         return $this->belongsToMany(Permission::class, 'roles_permissions');
     }
 
+    // README:
+    // this is what's used to check if the user has the permission
     public function hasPermission($permissionName)
     {
         return $this->permissions->contains('name', $permissionName);

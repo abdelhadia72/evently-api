@@ -23,20 +23,39 @@ class PermissionSeeder extends Seeder
      */
     public function run()
     {
-        // Define roles
-        $userRole = $this->aclService->createRole(ROLE_ENUM::USER);
+        // Create roles
         $adminRole = $this->aclService->createRole(ROLE_ENUM::ADMIN);
+        $organizerRole = $this->aclService->createRole(ROLE_ENUM::ORGANIZER);
+        $attendeeRole = $this->aclService->createRole(ROLE_ENUM::ATTENDEE);
 
-        // Create scoped permissions
+        // Create permissions for different entities
         $this->aclService->createScopePermissions('users', ['create', 'read', 'update', 'delete']);
+        $this->aclService->createScopePermissions('events', ['create', 'read', 'update', 'delete']);
 
-        // Assign permissions to roles
+        // Admin permissions (full access)
         $this->aclService->assignScopePermissionsToRole($adminRole, 'users', ['create', 'read', 'update', 'delete']);
+        $this->aclService->assignScopePermissionsToRole($adminRole, 'events', ['create', 'read', 'update', 'delete']);
+
+        // Organizer permissions
+        $this->aclService->assignScopePermissionsToRole($organizerRole, 'events', ['create', 'read', 'update', 'delete']);
+        $this->aclService->assignScopePermissionsToRole($organizerRole, 'users', ['read']);
+
+        // Attendee permissions
+        $this->aclService->assignScopePermissionsToRole($attendeeRole, 'events', ['read']);
+        $this->aclService->assignScopePermissionsToRole($attendeeRole, 'users', ['read']);
     }
 
     public function rollback()
     {
-        $adminRole = Role::where('name', ROLE_ENUM::ADMIN)->first();
-        $this->aclService->removeScopePermissionsFromRole($adminRole, 'users', ['create', 'read', 'update', 'delete']);
+        $roles = Role::whereIn('name', [
+            ROLE_ENUM::ADMIN->value,
+            ROLE_ENUM::ORGANIZER->value,
+            ROLE_ENUM::ATTENDEE->value,
+        ])->get();
+
+        foreach ($roles as $role) {
+            $this->aclService->removeScopePermissionsFromRole($role, 'users', ['create', 'read', 'update', 'delete']);
+            $this->aclService->removeScopePermissionsFromRole($role, 'events', ['create', 'read', 'update', 'delete']);
+        }
     }
 }
