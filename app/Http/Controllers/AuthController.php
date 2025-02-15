@@ -68,7 +68,6 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request)
     {
-
         try {
             return DB::transaction(
                 function () use ($request) {
@@ -76,16 +75,30 @@ class AuthController extends Controller
                     if ($user) {
                         return response()->json(['success' => false, 'errors' => [__('auth.email_already_exists')]]);
                     }
-                    $user = User::create(
-                        [
-                            'email' => $request->email,
-                            'password' => Hash::make($request->password),
-                        ]
-                    );
-                    $user->assignRole(ROLE::USER);
+
+                    $user = User::create([
+                        'email' => $request->email,
+                        'password' => Hash::make($request->password),
+                        'is_verified' => false,
+                        // README:
+                        // to put in services
+                        'otp' => str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+                        'otp_expires_at' => now()->addMinutes(10),
+                    ]);
+
+                    $role = ROLE::from($request->role);
+                    $user->assignRole($role);
+
                     $token = $user->createToken('authToken', ['expires_in' => 60 * 24 * 30])->plainTextToken;
 
-                    return response()->json(['success' => true, 'data' => ['token' => $token], 'message' => __('auth.register_success')]);
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'token' => $token,
+                            'user' => $user,
+                        ],
+                        'message' => __('auth.register_success'),
+                    ]);
                 }
             );
         } catch (\Exception $e) {

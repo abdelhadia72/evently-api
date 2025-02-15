@@ -52,6 +52,7 @@ Route::middleware('auth:api')->group(
             function () {
                 Route::controller(UserController::class)->group(
                     function () {
+                        Route::post('/verify-otp', 'verifyOtp');
                         Route::post('/', 'createOne');
                         Route::get('/{id}', 'readOne');
                         Route::get('/', 'readAll');
