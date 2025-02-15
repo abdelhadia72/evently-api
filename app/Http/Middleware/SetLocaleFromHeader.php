@@ -16,7 +16,7 @@ class SetLocaleFromHeader
      */
     public function handle(Request $request, Closure $next)
     {
-        $locale = $request->header('Accept-Language');
+        $locale = $request->header('Accept-Language', default: 'en');
         if ($locale) {
             if (! in_array($locale, ['en', 'fr'])) {
                 $locale = 'fr';
