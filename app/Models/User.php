@@ -32,6 +32,13 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     protected $fillable = [
         'email',
         'password',
+        'otp',
+        'otp_expires_at',
+        'last_login_at',
+        'last_login_ip',
+        'is_verified',
+        'verified_at',
+        'login_attempts',
     ];
 
     /**
@@ -60,6 +67,11 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     {
         return [
             'email_verified_at' => 'datetime',
+            'otp_expires_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'is_verified' => 'boolean',
+            'login_attempts' => 'integer',
         ];
     }
 

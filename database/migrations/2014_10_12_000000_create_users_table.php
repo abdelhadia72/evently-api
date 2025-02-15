@@ -17,8 +17,15 @@ return new class extends Migration
             'users', function (Blueprint $table) {
                 $table->id();
                 $table->string('email')->unique();
-                $table->timestamp('email_verified_at')->nullable();
                 $table->string('password');
+                $table->string('otp')->nullable();
+                $table->timestamp('otp_expires_at')->nullable();
+                $table->timestamp('last_login_at')->nullable();
+                $table->string('last_login_ip')->nullable();
+                $table->boolean('is_verified')->default(false);
+                $table->timestamp('verified_at')->nullable();
+                $table->integer('login_attempts')->default(0);
+                $table->timestamp('email_verified_at')->nullable();
                 $table->rememberToken();
                 $table->timestamps();
             }
