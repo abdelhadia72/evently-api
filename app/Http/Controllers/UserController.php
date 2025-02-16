@@ -133,7 +133,6 @@ class UserController extends CrudController
                 ], 400);
             }
 
-            // Verify the user
             $user->update([
                 'is_verified' => true,
                 'verified_at' => now(),

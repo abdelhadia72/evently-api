@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Notifications\EventAdditionNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -151,6 +152,10 @@ class EventController extends Controller
             'status' => $request->input('status', 'attending'),
             'comment' => $request->input('comment'),
         ]);
+
+        // send notification via mail
+        $user = Auth::user();
+        $user->notify(new EventAdditionNotification($event->title, $event->id, $user->id));
 
         return response()->json([
             'success' => true,
