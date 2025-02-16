@@ -6,6 +6,7 @@ use App\Enums\ROLE;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
+use App\Notifications\OTPVerificationNotification;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -75,6 +76,7 @@ class AuthController extends Controller
                     if ($user) {
                         return response()->json(['success' => false, 'errors' => [__('auth.email_already_exists')]]);
                     }
+                    $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
                     $user = User::create([
                         'email' => $request->email,
@@ -82,7 +84,8 @@ class AuthController extends Controller
                         'is_verified' => false,
                         // README:
                         // to put in services
-                        'otp' => str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+                        // 'otp' => str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+                        'otp' => $otp,
                         'otp_expires_at' => now()->addMinutes(10),
                     ]);
 
@@ -90,6 +93,7 @@ class AuthController extends Controller
                     $user->assignRole($role);
 
                     $token = $user->createToken('authToken', ['expires_in' => 60 * 24 * 30])->plainTextToken;
+                    $user->notify(new OTPVerificationNotification($otp));
 
                     return response()->json([
                         'success' => true,

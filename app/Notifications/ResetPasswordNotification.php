@@ -41,11 +41,14 @@ class ResetPasswordNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        // Url : APP_URL/auth/reset-password/{token}
+        $url = env('APP_URL').'/auth/reset-password/'.$this->token;
+
         return (new MailMessage)
-            ->line('Vous recevez cet e-mail car nous avons reçu une demande de réinitialisation de mot de passe pour votre compte.')
-            ->action('Réinitialiser', url(env('APP_URL').'/auth/reset-password/'.$this->token))
-            ->line('Si vous n\'avez pas demandé de réinitialisation de mot de passe, aucune autre action n\'est requise.');
+            ->subject('Reset Password Notification')
+            ->line('You are receiving this email because we received a password reset request for your account.')
+            ->action('Reset Password', url($url))
+            ->line('This password reset link will expire in 60 minutes.')
+            ->line('If you did not request a password reset, no further action is required.');
     }
 
     /**
