@@ -10,10 +10,19 @@ class EventController extends Controller
 {
     public function createOne(Request $request)
     {
+        // check for permission
         if (! Auth::user()->hasPermission('events', 'create')) {
             return response()->json([
                 'success' => false,
                 'errors' => ['You do not have permission to create events'],
+            ], 403);
+        }
+
+        // check for verification
+        if (! Auth::user()->is_verified) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['You need to verify your account before creating events'],
             ], 403);
         }
 
