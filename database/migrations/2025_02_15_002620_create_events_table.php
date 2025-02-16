@@ -18,7 +18,7 @@ return new class extends Migration
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->string('location');
-            $table->string('image_url');
+            $table->string('image_url')->nullable();
             $table->enum('category', ['music', 'art', 'food', 'social', 'sports', 'games', 'other']);
             $table->foreignId('organizer_id')->constrained('users')->onDelete('cascade');
             $table->enum('status', ['active', 'inactive', 'published', 'cancelled'])->default('active');

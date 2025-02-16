@@ -116,4 +116,75 @@ class EventController extends Controller
             'success' => true,
         ]);
     }
+
+    public function attend(Request $request, $id)
+    {
+        $event = Event::findOrFail($id);
+
+        // event is full
+        if ($event->max_attendees && $event->attendees()->count() >= $event->max_attendees) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['This event has reached maximum capacity'],
+            ], 400);
+        }
+
+        // already attending the event
+        if ($event->attendees()->where('user_id', Auth::id())->exists()) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['You have already attend to this event'],
+            ], 400);
+        }
+
+        // attach the user with their RSVP status
+        $event->attendees()->attach(Auth::id(), [
+            'status' => $request->input('status', 'attending'),
+            'comment' => $request->input('comment'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully RSVP\'d to event',
+        ]);
+    }
+
+    public function updateAttendance(Request $request, $id)
+    {
+        $event = Event::findOrFail($id);
+
+        $event->attendees()->updateExistingPivot(Auth::id(), [
+            'status' => $request->input('status'),
+            'comment' => $request->input('comment'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully updated RSVP status',
+        ]);
+    }
+
+    public function cancelAttendance($id)
+    {
+        $event = Event::findOrFail($id);
+
+        $event->attendees()->detach(Auth::id());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Successfully cancelled attendance',
+        ]);
+    }
+
+    public function getAttendees($id)
+    {
+        $event = Event::findOrFail($id);
+
+        $attendees = $event->attendees()->with(['roles'])->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $attendees,
+        ]);
+    }
 }

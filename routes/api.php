@@ -88,6 +88,12 @@ Route::middleware('auth:api')->group(
                         Route::get('/', 'readAll');
                         Route::put('/{id}', 'updateOne');
                         Route::delete('/{id}', 'deleteOne');
+
+                        // RSVP routes
+                        Route::post('/{id}/attend', 'attend');
+                        Route::put('/{id}/attend', 'updateAttendance');
+                        Route::delete('/{id}/attend', 'cancelAttendance');
+                        Route::get('/{id}/attendees', 'getAttendees');
                     }
                 );
             }

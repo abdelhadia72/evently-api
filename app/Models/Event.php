@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Event extends Model
 {
@@ -19,6 +20,8 @@ class Event extends Model
         'organizer_id',
         'status',
         'max_attendees',
+        'image_url',
+        'category',
     ];
 
     protected $casts = [
@@ -32,6 +35,13 @@ class Event extends Model
         return $this->belongsTo(User::class, 'organizer_id');
     }
 
+    public function attendees(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)
+            ->withPivot(['status', 'comment'])
+            ->withTimestamps();
+    }
+
     public function rules($id = null)
     {
         return [
@@ -41,7 +51,9 @@ class Event extends Model
             'end_date' => 'required|date|after:start_date',
             'location' => 'required|string',
             'max_attendees' => 'nullable|integer|min:1',
-            'status' => 'required|in:draft,published,cancelled',
+            'status' => 'required|in:active,inactive,published,cancelled',
+            'image_url' => 'nullable|string|url',
+            'category' => 'required|in:music,art,food,social,sports,games,other',
         ];
     }
 }
