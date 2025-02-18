@@ -13,31 +13,37 @@ class EventController extends Controller
     {
         // check for permission
         if (! Auth::user()->hasPermission('events', 'create')) {
-            return response()->json([
-                'success' => false,
-                'errors' => ['You do not have permission to create events'],
-            ], 403);
+            return response()->json(
+                [
+                    'success' => false,
+                    'errors' => ['You do not have permission to create events'],
+                ],
+                403
+            );
         }
 
         // check for verification
         if (! Auth::user()->is_verified) {
-            return response()->json([
-                'success' => false,
-                'errors' => ['You need to verify your account before creating events'],
-            ], 403);
+            return response()->json(
+                [
+                    'success' => false,
+                    'errors' => ['You need to verify your account before creating events'],
+                ],
+                403
+            );
         }
 
         $validated = $request->validate((new Event)->rules());
 
-        $event = Event::create([
-            ...$validated,
-            'organizer_id' => Auth::id(),
-        ]);
+        $event = Event::create([...$validated, 'organizer_id' => Auth::id()]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $event,
-        ], 201);
+        return response()->json(
+            [
+                'success' => true,
+                'data' => $event,
+            ],
+            201
+        );
     }
 
     public function readAll(Request $request)
@@ -46,19 +52,27 @@ class EventController extends Controller
 
         if (! Auth::user()->hasPermission('events', 'read')) {
             if (! Auth::user()->hasPermission('events', 'read_own')) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => ['You do not have permission to view events'],
-                ], 403);
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => ['You do not have permission to view events'],
+                    ],
+                    403
+                );
             }
             $query->where('organizer_id', Auth::id());
         }
 
         $events = $query->paginate($request->input('per_page', 15));
 
+        // we add this for items insted of data
+        $response = $events->toArray();
+        $response['items'] = $response['data'];
+        unset($response['data']);
+
         return response()->json([
             'success' => true,
-            'data' => $events,
+            'data' => $response,
         ]);
     }
 
@@ -70,10 +84,13 @@ class EventController extends Controller
             ! Auth::user()->hasPermission('events', 'read') &&
             (! Auth::user()->hasPermission('events', 'read_own') || $event->organizer_id !== Auth::id())
         ) {
-            return response()->json([
-                'success' => false,
-                'errors' => ['You do not have permission to view this event'],
-            ], 403);
+            return response()->json(
+                [
+                    'success' => false,
+                    'errors' => ['You do not have permission to view this event'],
+                ],
+                403
+            );
         }
 
         return response()->json([
@@ -90,10 +107,13 @@ class EventController extends Controller
             ! Auth::user()->hasPermission('events', 'update') &&
             (! Auth::user()->hasPermission('events', 'update_own') || $event->organizer_id !== Auth::id())
         ) {
-            return response()->json([
-                'success' => false,
-                'errors' => ['You do not have permission to update this event'],
-            ], 403);
+            return response()->json(
+                [
+                    'success' => false,
+                    'errors' => ['You do not have permission to update this event'],
+                ],
+                403
+            );
         }
 
         $validated = $request->validate((new Event)->rules($id));
@@ -114,10 +134,13 @@ class EventController extends Controller
             ! Auth::user()->hasPermission('events', 'delete') &&
             (! Auth::user()->hasPermission('events', 'delete_own') || $event->organizer_id !== Auth::id())
         ) {
-            return response()->json([
-                'success' => false,
-                'errors' => ['You do not have permission to delete this event'],
-            ], 403);
+            return response()->json(
+                [
+                    'success' => false,
+                    'errors' => ['You do not have permission to delete this event'],
+                ],
+                403
+            );
         }
 
         $event->delete();
@@ -133,18 +156,24 @@ class EventController extends Controller
 
         // event is full
         if ($event->max_attendees && $event->attendees()->count() >= $event->max_attendees) {
-            return response()->json([
-                'success' => false,
-                'errors' => ['This event has reached maximum capacity'],
-            ], 400);
+            return response()->json(
+                [
+                    'success' => false,
+                    'errors' => ['This event has reached maximum capacity'],
+                ],
+                400
+            );
         }
 
         // already attending the event
         if ($event->attendees()->where('user_id', Auth::id())->exists()) {
-            return response()->json([
-                'success' => false,
-                'errors' => ['You have already attend to this event'],
-            ], 400);
+            return response()->json(
+                [
+                    'success' => false,
+                    'errors' => ['You have already attend to this event'],
+                ],
+                400
+            );
         }
 
         // attach the user with their RSVP status
@@ -194,7 +223,10 @@ class EventController extends Controller
     {
         $event = Event::findOrFail($id);
 
-        $attendees = $event->attendees()->with(['roles'])->get();
+        $attendees = $event
+            ->attendees()
+            ->with(['roles'])
+            ->get();
 
         return response()->json([
             'success' => true,
