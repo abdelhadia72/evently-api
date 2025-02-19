@@ -80,18 +80,18 @@ class EventController extends Controller
     {
         $event = Event::findOrFail($id);
 
-        if (
-            ! Auth::user()->hasPermission('events', 'read') &&
-            (! Auth::user()->hasPermission('events', 'read_own') || $event->organizer_id !== Auth::id())
-        ) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'errors' => ['You do not have permission to view this event'],
-                ],
-                403
-            );
-        }
+        // if (
+        //   !Auth::user()->hasPermission('events', 'read') &&
+        //   (!Auth::user()->hasPermission('events', 'read_own') || $event->organizer_id !== Auth::id())
+        // ) {
+        //   return response()->json(
+        //     [
+        //       'success' => false,
+        //       'errors' => ['You do not have permission to view this event'],
+        //     ],
+        //     403
+        //   );
+        // }
 
         return response()->json([
             'success' => true,

@@ -12,6 +12,8 @@ class Event extends Model
 {
     use HasFactory, Notifiable;
 
+    protected $with = ['organizer'];
+
     protected $fillable = [
         'title',
         'description',
