@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -75,14 +76,25 @@ Route::middleware('auth:api')->group(function () {
                 Route::post('/', 'createOne');
                 Route::put('/{id}', 'updateOne');
                 Route::delete('/{id}', 'deleteOne');
-
-                // RSVP routes
-                Route::post('/{id}/attend', 'attend');
-                Route::put('/{id}/attend', 'updateAttendance');
-                Route::delete('/{id}/attend', 'cancelAttendance');
-                Route::get('/{id}/attendees', 'getAttendees');
             });
         });
+
+    // Update ticket routes with clearer naming
+    Route::prefix('events')->group(function () {
+        Route::get('/{eventId}/tickets', [TicketController::class, 'index']);
+        Route::post('/{event}/tickets', [TicketController::class, 'store']);
+        Route::delete('/{event}/tickets', [TicketController::class, 'destroy']);
+    });
+
+    Route::prefix('tickets')->group(function () {
+        Route::get('/{ticketId}', [TicketController::class, 'show']);
+        Route::put('/{ticketId}', [TicketController::class, 'update']);
+    });
+
+    // Separate check-in routes
+    Route::prefix('check-ins')->group(function () {
+        Route::post('/tickets/{ticketId}', [TicketController::class, 'checkIn']);
+    });
 });
 
 // Public event routes

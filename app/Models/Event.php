@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 
 class Event extends Model
@@ -38,11 +37,21 @@ class Event extends Model
         return $this->belongsTo(User::class, 'organizer_id');
     }
 
-    public function attendees(): BelongsToMany
+    public function tickets()
     {
-        return $this->belongsToMany(User::class)
-            ->withPivot(['status', 'comment'])
-            ->withTimestamps();
+        return $this->hasMany(Ticket::class);
+    }
+
+    public function attendees()
+    {
+        return $this->hasManyThrough(
+            User::class,
+            Ticket::class,
+            'event_id', // Foreign key on tickets table
+            'id', // Foreign key on users table
+            'id', // Local key on events table
+            'user_id' // Local key on tickets table
+        )->where('tickets.status', 'active');
     }
 
     public function rules($id = null)
