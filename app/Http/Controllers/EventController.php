@@ -103,11 +103,14 @@ class EventController extends Controller
     {
         $event = Event::findOrFail($id);
 
-        if ($event->organizer_id !== Auth::id()) {
+        if (
+            ! Auth::user()->hasPermission('events', 'update') &&
+            (! Auth::user()->hasPermission('events', 'update_own') || $event->organizer_id !== Auth::id())
+        ) {
             return response()->json(
                 [
                     'success' => false,
-                    'errors' => ['You can only update events that you have created'],
+                    'errors' => ['You do not have permission to update this event'],
                 ],
                 403
             );
