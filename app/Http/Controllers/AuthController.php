@@ -86,9 +86,6 @@ class AuthController extends Controller
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
                     'is_verified' => false,
-                    // README:
-                    // to put in services
-                    // 'otp' => str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT),
                     'otp' => $otp,
                     'otp_expires_at' => now()->addMinutes(10),
                 ]);

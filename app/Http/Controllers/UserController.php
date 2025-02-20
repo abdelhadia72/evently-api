@@ -27,13 +27,11 @@ class UserController extends CrudController
     public function createOne(Request $request)
     {
         try {
-            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
             $request->merge([
                 'password' => Hash::make($request->password),
-                'otp' => $otp,
-                'otp_expires_at' => now()->addMinutes(10),
-                'is_verified' => false,
+                'otp' => '999999',
+                'otp_expires_at' => null,
+                'is_verified' => true,
                 'verified_at' => null,
                 'login_attempts' => 0,
                 'last_login_at' => null,
@@ -54,6 +52,7 @@ class UserController extends CrudController
         try {
             $roleEnum = ROLE::from($request->role);
             $item->syncRoles([$roleEnum]);
+            $item->update(['is_verified' => true]);
         } catch (\Exception $e) {
             Log::error('Error caught in function UserController.afterCreateOne : '.$e->getMessage());
             Log::error($e->getTraceAsString());
