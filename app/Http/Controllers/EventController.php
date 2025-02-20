@@ -46,20 +46,6 @@ class EventController extends Controller
     public function readAll(Request $request)
     {
         $query = Event::query();
-
-        if (! Auth::user()->hasPermission('events', 'read')) {
-            if (! Auth::user()->hasPermission('events', 'read_own')) {
-                return response()->json(
-                    [
-                        'success' => false,
-                        'errors' => ['You do not have permission to view events'],
-                    ],
-                    403
-                );
-            }
-            $query->where('organizer_id', Auth::id());
-        }
-
         $events = $query->paginate($request->input('per_page', 15));
 
         $response = $events->toArray();
