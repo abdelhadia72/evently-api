@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class Ticket extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'ticket_number',
@@ -24,6 +25,7 @@ class Ticket extends Model
 
         static::creating(function ($ticket) {
             $ticket->ticket_number = 'TKT-'.str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            $ticket->status = 'active';
             $ticket->qr_code = self::generateQRHash($ticket->user_id, $ticket->event_id);
         });
     }

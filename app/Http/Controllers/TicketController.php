@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Ticket;
+use App\Notifications\TicketBookedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +14,6 @@ class TicketController extends Controller
     public function index(Request $request, $eventId): JsonResponse
     {
         $event = Event::findOrFail($eventId);
-
         $this->authorize('viewAny', [Ticket::class, $event]);
 
         $tickets = $event->tickets()
@@ -29,30 +29,74 @@ class TicketController extends Controller
         ]);
     }
 
-    public function store(Request $request, Event $event): JsonResponse
+    public function store(Request $request, $eventId): JsonResponse
     {
-        $existingTicket = Ticket::where('event_id', $event->id)
-            ->where('user_id', Auth::id())
-            ->first();
+        try {
+            $event = Event::findOrFail($eventId);
 
-        if ($existingTicket) {
+            if (! Auth::user()->is_verified) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account must be verified before booking tickets.',
+                ], 403);
+            }
+
+            if ($event->status !== 'active') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This event is not available for booking.',
+                ], 403);
+            }
+
+            $this->authorize('create', [Ticket::class, $event]);
+
+            $existingTicket = Ticket::where('event_id', $event->id)
+                ->where('user_id', Auth::id())
+                ->whereNotIn('status', ['cancelled'])
+                ->first();
+
+            if ($existingTicket) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You already have a ticket for this event.',
+                    'ticket' => $existingTicket,
+                ], 400);
+            }
+
+            $ticket = Ticket::create([
+                'event_id' => $event->id,
+                'user_id' => Auth::id(),
+            ]);
+
+            try {
+                Auth::user()->notify(new TicketBookedNotification($ticket, $event));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send ticket notification:', [
+                    'error' => $e->getMessage(),
+                    'user_id' => Auth::id(),
+                    'ticket_id' => $ticket->id,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ticket booked successfully. Check your email for details.',
+                'data' => $ticket->fresh(),
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Ticket creation error:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'event_id' => $eventId,
+                'user_id' => Auth::id(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'You already have a ticket for this event.',
-                'ticket' => $existingTicket,
-            ], 400);
+                'message' => 'Error booking ticket',
+            ], 500);
         }
-
-        $ticket = Ticket::create([
-            'event_id' => $event->id,
-            'user_id' => Auth::id(),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Ticket created successfully',
-            'ticket' => $ticket,
-        ], 201);
     }
 
     public function update(Request $request, string $ticketId): JsonResponse
@@ -72,25 +116,47 @@ class TicketController extends Controller
         ]);
     }
 
-    public function destroy(Event $event): JsonResponse
+    public function destroy(string $eventId): JsonResponse
     {
-        $ticket = Ticket::where('event_id', $event->id)
-            ->where('user_id', Auth::id())
-            ->first();
+        try {
+            $event = Event::findOrFail($eventId);
 
-        if (! $ticket) {
+            $ticket = Ticket::where('event_id', $event->id)
+                ->where('user_id', Auth::id())
+                ->where('status', 'active')  // Only cancel active tickets
+                ->first();
+
+            if (! $ticket) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active ticket found for this event',
+                ], 404);
+            }
+
+            $this->authorize('delete', $ticket); // Add policy check
+
+            $ticket->update([
+                'status' => 'cancelled',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ticket cancelled successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Ticket cancellation failed:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(), // Add stack trace
+                'event_id' => $eventId,
+                'user_id' => Auth::id(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'You don\'t have any tickets for this event',
-            ], 404);
+                'message' => 'Error cancelling ticket',
+            ], 500);
         }
-
-        $ticket->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Ticket cancelled successfully',
-        ]);
     }
 
     public function checkIn(Request $request, string $ticketId): JsonResponse
@@ -134,7 +200,6 @@ class TicketController extends Controller
 
         return response()->json([
             'success' => true,
-
             'data' => $ticket,
         ]);
     }

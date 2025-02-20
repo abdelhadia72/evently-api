@@ -10,37 +10,53 @@ class EventController extends Controller
 {
     public function createOne(Request $request)
     {
-        if (! Auth::user()->hasPermission('events', 'create')) {
+        try {
+            if (! Auth::user()->hasPermission('events', 'create')) {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => ['You do not have permission to create events'],
+                    ],
+                    403
+                );
+            }
+
+            if (! Auth::user()->is_verified) {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => ['You need to verify your account before creating events'],
+                    ],
+                    403
+                );
+            }
+
+            $validated = $request->validate((new Event)->rules());
+
+            $event = DB::transaction(function () use ($validated) {
+                return Event::create([...$validated, 'organizer_id' => Auth::id()]);
+            });
+
             return response()->json(
                 [
-                    'success' => false,
-                    'errors' => ['You do not have permission to create events'],
+                    'success' => true,
+                    'data' => $event,
                 ],
-                403
+                201
             );
+
+        } catch (\Exception $e) {
+            \Log::error('Event creation error:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating event',
+            ], 500);
         }
-
-        if (! Auth::user()->is_verified) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'errors' => ['You need to verify your account before creating events'],
-                ],
-                403
-            );
-        }
-
-        $validated = $request->validate((new Event)->rules());
-
-        $event = Event::create([...$validated, 'organizer_id' => Auth::id()]);
-
-        return response()->json(
-            [
-                'success' => true,
-                'data' => $event,
-            ],
-            201
-        );
     }
 
     public function readAll(Request $request)

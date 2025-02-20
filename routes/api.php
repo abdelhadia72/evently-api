@@ -79,19 +79,20 @@ Route::middleware('auth:api')->group(function () {
             });
         });
 
-    // Update ticket routes with clearer naming
+    // ticket routes
     Route::prefix('events')->group(function () {
         Route::get('/{eventId}/tickets', [TicketController::class, 'index']);
-        Route::post('/{event}/tickets', [TicketController::class, 'store']);
-        Route::delete('/{event}/tickets', [TicketController::class, 'destroy']);
+        Route::post('/{eventId}/tickets', [TicketController::class, 'store']);
+        Route::delete('/{eventId}/tickets', [TicketController::class, 'destroy']);
     });
 
     Route::prefix('tickets')->group(function () {
         Route::get('/{ticketId}', [TicketController::class, 'show']);
         Route::put('/{ticketId}', [TicketController::class, 'update']);
+        Route::post('/{ticketId}/verify', [TicketController::class, 'verifyTicket']); // Fix route placement
     });
 
-    // Separate check-in routes
+    // check-in routes
     Route::prefix('check-ins')->group(function () {
         Route::post('/tickets/{ticketId}', [TicketController::class, 'checkIn']);
     });

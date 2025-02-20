@@ -27,8 +27,7 @@ class TicketPolicy
 
     public function create(User $user, Event $event)
     {
-        return $user->id === $event->organizer_id ||
-               $user->hasPermission('tickets', 'create');
+        return true; // Allow all authenticated users to book tickets
     }
 
     public function checkIn(User $user, Ticket $ticket)
@@ -41,8 +40,9 @@ class TicketPolicy
         return $user->is_admin || $ticket->event->user_id === $user->id;
     }
 
-    public function delete(User $user, Ticket $ticket)
+    public function delete(User $user, ?Ticket $ticket = null, ?Event $event = null)
     {
-        return $user->is_admin || $ticket->event->user_id === $user->id;
+        // User can cancel their own tickets or if they're admin
+        return $user->id === $ticket->user_id || $user->is_admin;
     }
 }
