@@ -28,14 +28,12 @@ class AuthController extends Controller
                 return response()->json(['success' => false, 'errors' => [__('auth.not_admin')]]);
             }
 
-            return response()->json(
-                [
-                    'success' => true,
-                    'data' => [
-                        'user' => $user,
-                    ],
-                ]
-            );
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'user' => $user,
+                ],
+            ]);
         } catch (\Exception $e) {
             Log::error('Error caught in function AuthController.me: '.$e->getMessage());
             Log::error($e->getTraceAsString());
@@ -58,7 +56,11 @@ class AuthController extends Controller
             }
             $token = $user->createToken('authToken', ['expires_in' => 60 * 24 * 30])->plainTextToken;
 
-            return response()->json(['success' => true, 'message' => __('auth.login_success'), 'data' => ['token' => $token]]);
+            return response()->json([
+                'success' => true,
+                'message' => __('auth.login_success'),
+                'data' => ['token' => $token],
+            ]);
         } catch (\Exception $e) {
             Log::error('Error caught in function AuthController.login: '.$e->getMessage());
             Log::error($e->getTraceAsString());
@@ -70,41 +72,42 @@ class AuthController extends Controller
     public function register(RegisterRequest $request)
     {
         try {
-            return DB::transaction(
-                function () use ($request) {
-                    $user = User::where('email', $request->email)->first();
-                    if ($user) {
-                        return response()->json(['success' => false, 'errors' => [__('auth.email_already_exists')]]);
-                    }
-                    $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-                    $user = User::create([
-                        'email' => $request->email,
-                        'password' => Hash::make($request->password),
-                        'is_verified' => false,
-                        // README:
-                        // to put in services
-                        // 'otp' => str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT),
-                        'otp' => $otp,
-                        'otp_expires_at' => now()->addMinutes(10),
-                    ]);
-
-                    $role = ROLE::from($request->role);
-                    $user->assignRole($role);
-
-                    $token = $user->createToken('authToken', ['expires_in' => 60 * 24 * 30])->plainTextToken;
-                    $user->notify(new OTPVerificationNotification($otp));
-
+            return DB::transaction(function () use ($request) {
+                $user = User::where('email', $request->email)->first();
+                if ($user) {
                     return response()->json([
-                        'success' => true,
-                        'data' => [
-                            'token' => $token,
-                            'user' => $user,
-                        ],
-                        'message' => __('auth.register_success'),
+                        'success' => false,
+                        'errors' => [__('auth.email_already_exists')],
                     ]);
                 }
-            );
+                $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+                $user = User::create([
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'is_verified' => false,
+                    // README:
+                    // to put in services
+                    // 'otp' => str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+                    'otp' => $otp,
+                    'otp_expires_at' => now()->addMinutes(10),
+                ]);
+
+                $role = ROLE::from($request->role);
+                $user->assignRole($role);
+
+                $token = $user->createToken('authToken', ['expires_in' => 60 * 24 * 30])->plainTextToken;
+                $user->notify(new OTPVerificationNotification($otp));
+
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'token' => $token,
+                        'user' => $user,
+                    ],
+                    'message' => __('auth.register_success'),
+                ]);
+            });
         } catch (\Exception $e) {
             Log::error('Error caught in function AuthController.register: '.$e->getMessage());
             Log::error($e->getTraceAsString());
@@ -134,7 +137,10 @@ class AuthController extends Controller
             $email = $request->email;
             $status = Password::sendResetLink(['email' => $email]);
             if ($status === Password::RESET_LINK_SENT) {
-                return response()->json(['success' => true, 'message' => __('auth.password_reset_link_sent')]);
+                return response()->json([
+                    'success' => true,
+                    'message' => __('auth.password_reset_link_sent'),
+                ]);
             } elseif ($status === Password::INVALID_USER) {
                 return response()->json(['success' => false, 'errors' => [__('users.not_found')]]);
             } elseif ($status === Password::INVALID_TOKEN) {
@@ -145,7 +151,9 @@ class AuthController extends Controller
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
         } catch (\Exception $e) {
-            Log::error('Error caught in function AuthController.requestPasswordReset: '.$e->getMessage());
+            Log::error(
+                'Error caught in function AuthController.requestPasswordReset: '.$e->getMessage()
+            );
             Log::error($e->getTraceAsString());
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
@@ -155,33 +163,110 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         try {
-            return DB::transaction(
-                function () use ($request) {
-                    $status = Password::reset(
-                        $request->only('email', 'password', 'password_confirmation', 'token'),
-                        function ($user, $password) {
-                            $user->password = Hash::make($password);
-                            $user->save();
-                        }
-                    );
-                    if ($status === Password::PASSWORD_RESET) {
-                        return response()->json(['success' => true, 'message' => __('auth.password_reset_success')]);
-                    } elseif ($status === Password::INVALID_USER) {
-                        return response()->json(['success' => false, 'errors' => [__('users.not_found')]]);
-                    } elseif ($status === Password::INVALID_TOKEN) {
-                        return response()->json(['success' => false, 'errors' => [__('auth.invalid_token')]]);
-                    } elseif ($status === Password::RESET_THROTTLED) {
-                        return response()->json(['success' => false, 'errors' => [__('auth.reset_throttled')]]);
+            return DB::transaction(function () use ($request) {
+                $status = Password::reset(
+                    $request->only('email', 'password', 'password_confirmation', 'token'),
+                    function ($user, $password) {
+                        $user->password = Hash::make($password);
+                        $user->save();
                     }
-
-                    return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+                );
+                if ($status === Password::PASSWORD_RESET) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => __('auth.password_reset_success'),
+                    ]);
+                } elseif ($status === Password::INVALID_USER) {
+                    return response()->json(['success' => false, 'errors' => [__('users.not_found')]]);
+                } elseif ($status === Password::INVALID_TOKEN) {
+                    return response()->json(['success' => false, 'errors' => [__('auth.invalid_token')]]);
+                } elseif ($status === Password::RESET_THROTTLED) {
+                    return response()->json(['success' => false, 'errors' => [__('auth.reset_throttled')]]);
                 }
-            );
+
+                return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+            });
         } catch (\Exception $e) {
             Log::error('Error caught in function AuthController.resetPassword: '.$e->getMessage());
             Log::error($e->getTraceAsString());
 
             return response()->json(['success' => false, 'errors' => [__('common.unexpected_error')]]);
+        }
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:users,email',
+                'otp' => 'required|string|size:6',
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+
+            if (! $user) {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => ['User not found'],
+                    ],
+                    404
+                );
+            }
+
+            if ($user->is_verified) {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => ['User is already verified'],
+                    ],
+                    400
+                );
+            }
+
+            if ($user->otp !== $request->otp) {
+                $user->increment('login_attempts');
+
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => ['Invalid OTP'],
+                    ],
+                    400
+                );
+            }
+
+            if ($user->otp_expires_at < now()) {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => ['OTP has expired'],
+                    ],
+                    400
+                );
+            }
+
+            $user->update([
+                'is_verified' => true,
+                'verified_at' => now(),
+                'otp' => null,
+                'otp_expires_at' => null,
+                'login_attempts' => 0,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP verified successfully',
+                'data' => $user,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function AuthController.verifyOtp : '.$e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'errors' => [__('common.unexpected_error')],
+            ]);
         }
     }
 }

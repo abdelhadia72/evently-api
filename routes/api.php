@@ -23,6 +23,7 @@ Route::prefix('auth')
         Route::controller(AuthController::class)->group(function () {
             Route::post('/login', 'login');
             Route::post('/register', 'register');
+            Route::post('/verify-otp', 'verifyOtp');
             Route::post('/request-password-reset', 'requestPasswordReset');
             Route::post('/reset-password', 'resetPassword');
             Route::get('/disconnected', function () {
@@ -44,7 +45,6 @@ Route::middleware('auth:api')->group(function () {
         ->name('users.')
         ->group(function () {
             Route::controller(UserController::class)->group(function () {
-                Route::post('/verify-otp', 'verifyOtp');
                 Route::post('/', 'createOne');
                 Route::get('/{id}', 'readOne');
                 Route::get('/', 'readAll');
