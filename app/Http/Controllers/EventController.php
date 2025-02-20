@@ -128,4 +128,43 @@ class EventController extends Controller
             'data' => $event->tickets()->with('user')->paginate($request->input('per_page', 15)),
         ]);
     }
+
+    public function search(Request $request)
+    {
+        try {
+            $query = Event::query();
+
+            if ($request->filled('category')) {
+                $query->where('category', $request->category);
+            }
+
+            if ($request->filled('search')) {
+                $searchTerm = '%'.$request->search.'%';
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('title', 'like', $searchTerm)
+                        ->orWhere('description', 'like', $searchTerm);
+                });
+            }
+
+            $events = $query->paginate($request->input('per_page', 15));
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'items' => $events->items(),
+                    'total' => $events->total(),
+                    'current_page' => $events->currentPage(),
+                    'per_page' => $events->perPage(),
+                    'last_page' => $events->lastPage(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Search error: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error searching events',
+            ], 500);
+        }
+    }
 }

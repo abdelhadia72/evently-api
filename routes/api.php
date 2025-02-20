@@ -102,6 +102,7 @@ Route::prefix('events')
     ->name('events.')
     ->group(function () {
         Route::controller(EventController::class)->group(function () {
+            Route::get('/search', 'search');
             Route::get('/{id}', 'readOne');
             Route::get('/', 'readAll');
         });
