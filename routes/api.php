@@ -24,6 +24,7 @@ Route::prefix('auth')
             Route::post('/login', 'login');
             Route::post('/register', 'register');
             Route::post('/verify-otp', 'verifyOtp');
+            Route::post('/resend-otp', 'resendOtp');
             Route::post('/request-password-reset', 'requestPasswordReset');
             Route::post('/reset-password', 'resetPassword');
             Route::get('/disconnected', function () {

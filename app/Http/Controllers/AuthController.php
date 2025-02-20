@@ -105,7 +105,7 @@ class AuthController extends Controller
                         'token' => $token,
                         'user' => $user,
                     ],
-                    'message' => __('auth.register_success'),
+                    'message' => 'Registration successful',
                 ]);
             });
         } catch (\Exception $e) {
@@ -208,6 +208,81 @@ class AuthController extends Controller
                 return response()->json(
                     [
                         'success' => false,
+                        'errors' => 'User not found',
+                    ],
+                    404
+                );
+            }
+
+            if ($user->is_verified) {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => 'User is already verified',
+                    ],
+                    400
+                );
+            }
+
+            if ($user->otp !== $request->otp) {
+                $user->increment('login_attempts');
+
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => 'Invalid OTP',
+                    ],
+                    400
+                );
+            }
+
+            if ($user->otp_expires_at < now()) {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => 'OTP has expired',
+                    ],
+                    400
+                );
+            }
+
+            $user->update([
+                'is_verified' => true,
+                'verified_at' => now(),
+                'otp' => null,
+                'otp_expires_at' => null,
+                'login_attempts' => 0,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Your Acccount Have Been verified successfully',
+                'data' => $user,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error caught in function AuthController.verifyOtp : '.$e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'errors' => [__('common.unexpected_error')],
+            ]);
+        }
+    }
+
+    public function resendOtp(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:users,email',
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+
+            if (! $user) {
+                return response()->json(
+                    [
+                        'success' => false,
                         'errors' => ['User not found'],
                     ],
                     404
@@ -224,48 +299,27 @@ class AuthController extends Controller
                 );
             }
 
-            if ($user->otp !== $request->otp) {
-                $user->increment('login_attempts');
-
-                return response()->json(
-                    [
-                        'success' => false,
-                        'errors' => ['Invalid OTP'],
-                    ],
-                    400
-                );
-            }
-
-            if ($user->otp_expires_at < now()) {
-                return response()->json(
-                    [
-                        'success' => false,
-                        'errors' => ['OTP has expired'],
-                    ],
-                    400
-                );
-            }
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
             $user->update([
-                'is_verified' => true,
-                'verified_at' => now(),
-                'otp' => null,
-                'otp_expires_at' => null,
+                'otp' => $otp,
+                'otp_expires_at' => now()->addMinutes(10),
                 'login_attempts' => 0,
             ]);
 
+            $user->notify(new OTPVerificationNotification($otp));
+
             return response()->json([
                 'success' => true,
-                'message' => 'OTP verified successfully',
-                'data' => $user,
+                'message' => 'A new verification code has been sent to your email',
             ]);
         } catch (\Exception $e) {
-            Log::error('Error caught in function AuthController.verifyOtp : '.$e->getMessage());
+            Log::error('Error caught in function AuthController.resendOtp: '.$e->getMessage());
             Log::error($e->getTraceAsString());
 
             return response()->json([
                 'success' => false,
-                'errors' => [__('common.unexpected_error')],
+                'errors' => ['An unexpected error occurred'],
             ]);
         }
     }
