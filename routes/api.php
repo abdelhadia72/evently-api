@@ -89,7 +89,9 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('tickets')->group(function () {
         Route::get('/{ticketId}', [TicketController::class, 'show']);
         Route::put('/{ticketId}', [TicketController::class, 'update']);
-        Route::post('/{ticketId}/verify', [TicketController::class, 'verifyTicket']); // Fix route placement
+        Route::post('/{ticketId}/verify', [TicketController::class, 'verifyTicket']);
+
+        // delete ticket to be here
     });
 
     // check-in routes
