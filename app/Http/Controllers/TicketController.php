@@ -235,4 +235,19 @@ class TicketController extends Controller
             'data' => $ticket,
         ]);
     }
+
+    public function myTickets(Request $request): JsonResponse
+    {
+        $tickets = Ticket::where('user_id', Auth::id())
+            ->with(['event' => function ($query) {
+                $query->select('id', 'title', 'start_date', 'end_date', 'location', 'status');
+            }])
+            ->latest()
+            ->paginate($request->input('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $tickets,
+        ]);
+    }
 }

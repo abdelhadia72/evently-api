@@ -42,6 +42,7 @@ Route::middleware('auth:api')->group(function () {
                 Route::post('/me', 'me');
                 Route::post('/logout', 'logout');
             });
+            Route::get('/tickets', [TicketController::class, 'myTickets']);
         });
     Route::prefix('users')
         ->name('users.')
@@ -91,10 +92,10 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/{ticketId}', [TicketController::class, 'update']);
         Route::post('/{ticketId}/verify', [TicketController::class, 'verifyTicket']);
 
-        // delete ticket to be here
+        // add delete route later easy access
     });
 
-    // Add single check-in route
+    // check-in
     Route::prefix('check-in')->group(function () {
         Route::post('tickets', [TicketController::class, 'checkIn']);
     });
