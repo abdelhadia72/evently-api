@@ -15,13 +15,23 @@ class EventController extends Controller
     {
         try {
             if (! Auth::user()->hasPermission('events', 'create')) {
-                return response()->json(
-                    [
-                        'success' => false,
-                        'errors' => ['You do not have permission to create events'],
-                    ],
-                    403
-                );
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['You do not have permission to create events'],
+                ], 403);
+            }
+
+            if ($request->hasFile('image')) {
+                $uploadRequest = new Request;
+                $uploadRequest->files->set('file', $request->file('image'));
+
+                $uploadController = new UploadController;
+                $uploadResponse = $uploadController->createOne($uploadRequest);
+                $uploadData = json_decode($uploadResponse->getContent(), true);
+
+                if ($uploadData['success']) {
+                    $request->merge(['image_url' => $uploadData['data']['item']['url']]);
+                }
             }
 
             if (! Auth::user()->is_verified) {
@@ -64,6 +74,7 @@ class EventController extends Controller
             return response()->json(
                 [
                     'success' => true,
+                    'message' => 'Event created successfully',
                     'data' => $event,
                 ],
                 201
@@ -74,11 +85,12 @@ class EventController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'user_id' => Auth::id(),
+                'request_data' => $request->all(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating event',
+                'message' => 'Error creating event: '.$e->getMessage(),
             ], 500);
         }
     }
