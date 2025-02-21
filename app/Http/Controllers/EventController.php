@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EventCategory;
+use App\Enums\EventStatus;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +32,27 @@ class EventController extends Controller
                     ],
                     403
                 );
+            }
+
+            $category = $request->input('category');
+            $status = $request->input('status');
+
+            if (! in_array($category, EventCategory::values())) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => [
+                        'category' => 'Invalid category. Available categories: '.implode(', ', EventCategory::values()),
+                    ],
+                ], 422);
+            }
+
+            if (! in_array($status, EventStatus::values())) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => [
+                        'status' => 'Invalid status. Available statuses: '.implode(', ', EventStatus::values()),
+                    ],
+                ], 422);
             }
 
             $validated = $request->validate((new Event)->rules());
