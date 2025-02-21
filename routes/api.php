@@ -94,9 +94,9 @@ Route::middleware('auth:api')->group(function () {
         // delete ticket to be here
     });
 
-    // check-in routes
-    Route::prefix('check-ins')->group(function () {
-        Route::post('/tickets/{ticketId}', [TicketController::class, 'checkIn']);
+    // Add single check-in route
+    Route::prefix('check-in')->group(function () {
+        Route::post('tickets', [TicketController::class, 'checkIn']);
     });
 });
 

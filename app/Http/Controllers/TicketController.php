@@ -123,7 +123,7 @@ class TicketController extends Controller
 
             $ticket = Ticket::where('event_id', $event->id)
                 ->where('user_id', Auth::id())
-                ->where('status', 'active')  // Only cancel active tickets
+                ->where('status', 'active')
                 ->first();
 
             if (! $ticket) {
@@ -133,7 +133,7 @@ class TicketController extends Controller
                 ], 404);
             }
 
-            $this->authorize('delete', $ticket); // Add policy check
+            $this->authorize('delete', $ticket);
 
             $ticket->update([
                 'status' => 'cancelled',
@@ -147,7 +147,7 @@ class TicketController extends Controller
         } catch (\Exception $e) {
             \Log::error('Ticket cancellation failed:', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(), // Add stack trace
+                'trace' => $e->getTraceAsString(),
                 'event_id' => $eventId,
                 'user_id' => Auth::id(),
             ]);
@@ -159,37 +159,69 @@ class TicketController extends Controller
         }
     }
 
-    public function checkIn(Request $request, string $ticketId): JsonResponse
+    public function checkIn(Request $request): JsonResponse
     {
-        $ticket = Ticket::findOrFail($ticketId);
-        $this->authorize('checkIn', $ticket);
-
         $request->validate([
             'qr_code' => 'required|string',
         ]);
 
-        if ($ticket->status !== 'active') {
+        $user = Auth::user();
+        $ticket = Ticket::where('qr_code', $request->qr_code)
+            ->with(['event' => function ($query) {
+                $query->select('id', 'title', 'organizer_id');
+            }])
+            ->first();
+
+        if (! $ticket) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid ticket',
+            ], 404);
+        }
+
+        $event = Event::findOrFail($ticket->event_id);
+        if (! $event) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Event not found',
+            ], 404);
+        }
+
+        if ($event->organizer_id !== $user->id && $user->role !== 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only the event organizer can check-in tickets for this event',
+            ], 403);
+        }
+
+        if ($ticket->status === 'used') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ticket already used',
+                'check_in_time' => $ticket->check_in_time,
             ], 400);
         }
 
-        if (! $ticket->verifyQRCode($request->qr_code)) {
+        if ($ticket->status !== 'active') {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid QR code',
+                'message' => 'Ticket is '.$ticket->status,
             ], 400);
         }
 
         $ticket->update([
             'status' => 'used',
             'check_in_time' => now(),
+            'checked_in_by' => $user->id,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Check-in successful',
+            'data' => [
+                'event' => $ticket->event->title,
+                'ticket' => $ticket->fresh(),
+            ],
         ]);
     }
 
