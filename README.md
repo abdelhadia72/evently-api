@@ -5,46 +5,64 @@ REST API for event management and ticket booking system.
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - PHP >= 8.1
 - Composer
 - MySQL/PostgreSQL
 - Node.js & npm (for frontend)
 
 ### Installation
+
 1. Clone the repository
+
 ```
 git clone https://github.com/yourusername/evently-api.git
 ```
+
 2. Navigate to the project directory
+
 ```
 cd evently-api
 ```
+
 3. Install PHP dependencies
+
 ```
 composer install
 ```
+
 4. Install Node.js dependencies
+
 ```
 npm install
 ```
+
 5. Set up environment variables
+
 ```
 cp .env.example .env
 ```
+
 6. Generate application key
+
 ```
 php artisan key:generate
 ```
+
 7. Run database migrations
+
 ```
 php artisan migrate
 ```
+
 8. Start the development server
+
 ```
 php artisan serve
 ```
 
 ## 👥 User Types
+
 - 👑 Admin - Full system access and user management
 - 📋 Organizer - Can create and manage events, handle check-ins
 - 🎟️ Attendee - Can browse events and manage tickets
@@ -52,6 +70,7 @@ php artisan serve
 ## 🛣️ API Endpoints
 
 ### 🔐 Authentication
+
 - POST `/api/auth/login` - User login
 - POST `/api/auth/register` - User registration
 - POST `/api/auth/verify-otp` - Verify OTP code
@@ -62,6 +81,7 @@ php artisan serve
 - POST `/api/auth/logout` - Logout user (requires auth)
 
 ### 🎭 Events
+
 - GET `/api/events` - List all events (public)
 - GET `/api/events/search` - Search events (public)
 - GET `/api/events/{id}` - Get event details (public)
@@ -70,6 +90,7 @@ php artisan serve
 - DELETE `/api/events/{id}` - Delete event (requires auth)
 
 Event Model:
+
 ```json
 {
   "title": "string",
@@ -85,6 +106,7 @@ Event Model:
 ```
 
 ### 🎟️ Tickets
+
 - GET `/api/auth/tickets` - List user's tickets (requires auth)
 - GET `/api/events/{eventId}/tickets` - List event tickets (requires auth)
 - POST `/api/events/{eventId}/tickets` - Book ticket for event (requires auth)
@@ -95,6 +117,7 @@ Event Model:
 - POST `/api/check-in/tickets` - Check-in ticket (requires auth)
 
 Ticket Model:
+
 ```json
 {
   "ticket_number": "string",
@@ -107,6 +130,7 @@ Ticket Model:
 ```
 
 ### 👥 Users
+
 - GET `/api/users` - List users (requires auth)
 
 - GET `/api/users/{id}` - Get user details (requires auth)
@@ -116,6 +140,7 @@ Ticket Model:
 - DELETE `/api/users/{id}` - Delete user (requires auth)
 
 ### 📁 File Uploads
+
 - POST `/api/uploads` - Upload file (requires auth)
 - GET `/api/uploads/{id}` - Get upload details (requires auth)
 - GET `/api/uploads/image/{id}` - Get image (public)
@@ -123,13 +148,17 @@ Ticket Model:
 - DELETE `/api/uploads` - Delete multiple uploads (requires auth)
 
 ### 🔒 Authentication
+
 The API uses token-based authentication. Include the token in the Authorization header:
+
 ```
 Authorization: Bearer <token>
 ```
 
 ### ❌ Error Responses
+
 All endpoints return JSON responses in the following format:
+
 ```json
 {
   "success": false,
@@ -138,10 +167,14 @@ All endpoints return JSON responses in the following format:
 ```
 
 ### ✅ Success Responses
+
 Successful responses follow this format:
+
 ```json
 {
   "success": true,
+  "message: message,
   "data": { ... }
 }
 
+```
