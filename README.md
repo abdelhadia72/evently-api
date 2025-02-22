@@ -9,7 +9,7 @@ REST API for event management and ticket booking system.
 - PHP >= 8.1
 - Composer
 - MySQL/PostgreSQL
-- Node.js & npm (for frontend)
+- Node.js
 
 ### Installation
 
@@ -71,23 +71,23 @@ php artisan serve
 
 ### 🔐 Authentication
 
-- POST `/api/auth/login` - User login
-- POST `/api/auth/register` - User registration
-- POST `/api/auth/verify-otp` - Verify OTP code
-- POST `/api/auth/resend-otp` - Resend OTP code
-- POST `/api/auth/request-password-reset` - Request password reset
-- POST `/api/auth/reset-password` - Reset password
-- POST `/api/auth/me` - Get authenticated user info (requires auth)
-- POST `/api/auth/logout` - Logout user (requires auth)
+- POST /auth/login` - User login
+- POST /auth/register` - User registration
+- POST /auth/verify-otp` - Verify OTP code
+- POST /auth/resend-otp` - Resend OTP code
+- POST /auth/request-password-reset` - Request password reset
+- POST /auth/reset-password` - Reset password
+- POST /auth/me` - Get authenticated user info (requires auth)
+- POST /auth/logout` - Logout user (requires auth)
 
 ### 🎭 Events
 
-- GET `/api/events` - List all events (public)
-- GET `/api/events/search` - Search events (public)
-- GET `/api/events/{id}` - Get event details (public)
-- POST `/api/events` - Create new event (requires auth)
-- PUT `/api/events/{id}` - Update event (requires auth)
-- DELETE `/api/events/{id}` - Delete event (requires auth)
+- GET /events` - List all events (public)
+- GET /events/search` - Search events (public)
+- GET /events/{id}` - Get event details (public)
+- POST /events` - Create new event (requires auth)
+- PUT /events/{id}` - Update event (requires auth)
+- DELETE /events/{id}` - Delete event (requires auth)
 
 Event Model:
 
@@ -107,14 +107,14 @@ Event Model:
 
 ### 🎟️ Tickets
 
-- GET `/api/auth/tickets` - List user's tickets (requires auth)
-- GET `/api/events/{eventId}/tickets` - List event tickets (requires auth)
-- POST `/api/events/{eventId}/tickets` - Book ticket for event (requires auth)
-- GET `/api/tickets/{ticketId}` - Get ticket details (requires auth)
-- PUT `/api/tickets/{ticketId}` - Update ticket (requires auth)
-- POST `/api/tickets/{ticketId}/verify` - Verify ticket (requires auth)
-- DELETE `/api/events/{eventId}/tickets` - Cancel ticket (requires auth)
-- POST `/api/check-in/tickets` - Check-in ticket (requires auth)
+- GET /auth/tickets` - List user's tickets (requires auth)
+- GET /events/{eventId}/tickets` - List event tickets (requires auth)
+- POST /events/{eventId}/tickets` - Book ticket for event (requires auth)
+- GET /tickets/{ticketId}` - Get ticket details (requires auth)
+- PUT /tickets/{ticketId}` - Update ticket (requires auth)
+- POST /tickets/{ticketId}/verify` - Verify ticket (requires auth)
+- DELETE /events/{eventId}/tickets` - Cancel ticket (requires auth)
+- POST /check-in/tickets` - Check-in ticket (requires auth)
 
 Ticket Model:
 
@@ -131,21 +131,21 @@ Ticket Model:
 
 ### 👥 Users
 
-- GET `/api/users` - List users (requires auth)
+- GET /users` - List users (requires auth)
 
-- GET `/api/users/{id}` - Get user details (requires auth)
-- POST `/api/users` - Create user (requires auth)
-- PUT `/api/users/{id}` - Update user (requires auth)
-- PATCH `/api/users/{id}` - Partial update user (requires auth)
-- DELETE `/api/users/{id}` - Delete user (requires auth)
+- GET /users/{id}` - Get user details (requires auth)
+- POST /users` - Create user (requires auth)
+- PUT /users/{id}` - Update user (requires auth)
+- PATCH /users/{id}` - Partial update user (requires auth)
+- DELETE /users/{id}` - Delete user (requires auth)
 
 ### 📁 File Uploads
 
-- POST `/api/uploads` - Upload file (requires auth)
-- GET `/api/uploads/{id}` - Get upload details (requires auth)
-- GET `/api/uploads/image/{id}` - Get image (public)
-- DELETE `/api/uploads/{id}` - Delete upload (requires auth)
-- DELETE `/api/uploads` - Delete multiple uploads (requires auth)
+- POST /uploads` - Upload file (requires auth)
+- GET /uploads/{id}` - Get upload details (requires auth)
+- GET /uploads/image/{id}` - Get image (public)
+- DELETE /uploads/{id}` - Delete upload (requires auth)
+- DELETE /uploads` - Delete multiple uploads (requires auth)
 
 ### 🔒 Authentication
 
