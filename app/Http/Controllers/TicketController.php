@@ -16,7 +16,8 @@ class TicketController extends Controller
         $event = Event::findOrFail($eventId);
         $this->authorize('viewAny', [Ticket::class, $event]);
 
-        $tickets = $event->tickets()
+        $tickets = $event
+            ->tickets()
             ->when(! Auth::user()->hasPermission('tickets', 'read'), function ($query) {
                 return $query->where('user_id', Auth::id());
             })
@@ -35,17 +36,13 @@ class TicketController extends Controller
             $event = Event::findOrFail($eventId);
 
             if (! Auth::user()->is_verified) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your account must be verified before booking tickets.',
-                ], 403);
-            }
-
-            if ($event->status !== 'active') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This event is not available for booking.',
-                ], 403);
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => 'Your account must be verified before booking tickets.',
+                    ],
+                    403
+                );
             }
 
             $this->authorize('create', [Ticket::class, $event]);
@@ -56,11 +53,14 @@ class TicketController extends Controller
                 ->first();
 
             if ($existingTicket) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You already have a ticket for this event.',
-                    'ticket' => $existingTicket,
-                ], 400);
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => 'You already have a ticket for this event.',
+                        'ticket' => $existingTicket,
+                    ],
+                    400
+                );
             }
 
             $ticket = Ticket::create([
@@ -78,12 +78,14 @@ class TicketController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Ticket booked successfully. Check your email for details.',
-                'data' => $ticket->fresh(),
-            ], 201);
-
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => 'Ticket booked successfully. Check your email for details.',
+                    'data' => $ticket->fresh(),
+                ],
+                201
+            );
         } catch (\Exception $e) {
             \Log::error('Ticket creation error:', [
                 'error' => $e->getMessage(),
@@ -92,10 +94,13 @@ class TicketController extends Controller
                 'user_id' => Auth::id(),
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error booking ticket',
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Error booking ticket',
+                ],
+                500
+            );
         }
     }
 
@@ -127,10 +132,13 @@ class TicketController extends Controller
                 ->first();
 
             if (! $ticket) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No active ticket found for this event',
-                ], 404);
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => 'No active ticket found for this event',
+                    ],
+                    404
+                );
             }
 
             $this->authorize('delete', $ticket);
@@ -143,7 +151,6 @@ class TicketController extends Controller
                 'success' => true,
                 'message' => 'Ticket cancelled successfully',
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Ticket cancellation failed:', [
                 'error' => $e->getMessage(),
@@ -152,10 +159,13 @@ class TicketController extends Controller
                 'user_id' => Auth::id(),
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error cancelling ticket',
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Error cancelling ticket',
+                ],
+                500
+            );
         }
     }
 
@@ -167,46 +177,63 @@ class TicketController extends Controller
 
         $user = Auth::user();
         $ticket = Ticket::where('qr_code', $request->qr_code)
-            ->with(['event' => function ($query) {
-                $query->select('id', 'title', 'organizer_id');
-            }])
+            ->with([
+                'event' => function ($query) {
+                    $query->select('id', 'title', 'organizer_id');
+                },
+            ])
             ->first();
 
         if (! $ticket) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid ticket',
-            ], 404);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Invalid ticket',
+                ],
+                404
+            );
         }
 
         $event = Event::findOrFail($ticket->event_id);
         if (! $event) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Event not found',
-            ], 404);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Event not found',
+                ],
+                404
+            );
         }
 
         if ($event->organizer_id !== $user->id && $user->role !== 'admin') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only the event organizer can check-in tickets for this event',
-            ], 403);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Only the event organizer can check-in tickets for this event',
+                ],
+                403
+            );
         }
 
         if ($ticket->status === 'used') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ticket already used',
-                'check_in_time' => $ticket->check_in_time,
-            ], 400);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Ticket already used',
+                    'check_in_time' => $ticket->check_in_time,
+                ],
+                400
+            );
         }
 
         if ($ticket->status !== 'active') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ticket is '.$ticket->status,
-            ], 400);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Ticket is '.$ticket->status,
+                ],
+                400
+            );
         }
 
         $ticket->update([
@@ -239,9 +266,11 @@ class TicketController extends Controller
     public function myTickets(Request $request): JsonResponse
     {
         $tickets = Ticket::where('user_id', Auth::id())
-            ->with(['event' => function ($query) {
-                $query->select('id', 'title', 'start_date', 'end_date', 'location', 'status');
-            }])
+            ->with([
+                'event' => function ($query) {
+                    $query->select('id', 'title', 'start_date', 'end_date', 'location', 'status');
+                },
+            ])
             ->latest()
             ->paginate($request->input('per_page', 15));
 
