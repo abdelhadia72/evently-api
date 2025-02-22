@@ -8,15 +8,14 @@ REST API for event management and ticket booking system.
 
 - PHP >= 8.1
 - Composer
-- MySQL/PostgreSQL
-- Node.js
+- XAMPP (for local development)
 
 ### Installation
 
 1. Clone the repository
 
 ```
-git clone https://github.com/yourusername/evently-api.git
+git clone https://github.com/abdelhadi/evently-api.git
 ```
 
 2. Navigate to the project directory
@@ -31,31 +30,53 @@ cd evently-api
 composer install
 ```
 
-4. Install Node.js dependencies
-
-```
-npm install
-```
-
-5. Set up environment variables
+4. Set up environment variables
 
 ```
 cp .env.example .env
 ```
 
-6. Generate application key
+5. Update the `.env` file with database and mailing settings:
+
+#### Database settings
+
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=evently
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+#### Mailing settings
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=localhost
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="no-reply@evently.com"
+MAIL_FROM_NAME="${API_NAME}"
+```
+
+7. Generate application key
 
 ```
 php artisan key:generate
 ```
 
-7. Run database migrations
+8. Run database migrations
 
 ```
 php artisan migrate
 ```
 
-8. Start the development server
+9. Start XAMPP and ensure MySQL and Apache are running.
+
+10. Start the development server
 
 ```
 php artisan serve
@@ -71,23 +92,23 @@ php artisan serve
 
 ### 🔐 Authentication
 
-- POST /auth/login` - User login
-- POST /auth/register` - User registration
-- POST /auth/verify-otp` - Verify OTP code
-- POST /auth/resend-otp` - Resend OTP code
-- POST /auth/request-password-reset` - Request password reset
-- POST /auth/reset-password` - Reset password
-- POST /auth/me` - Get authenticated user info (requires auth)
-- POST /auth/logout` - Logout user (requires auth)
+- POST `/auth/login` - User login
+- POST `/auth/register` - User registration
+- POST `/auth/verify-otp` - Verify OTP code
+- POST `/auth/resend-otp` - Resend OTP code
+- POST `/auth/request-password-reset` - Request password reset
+- POST `/auth/reset-password` - Reset password
+- POST `/auth/me` - Get authenticated user info (requires auth)
+- POST `/auth/logout` - Logout user (requires auth)
 
 ### 🎭 Events
 
-- GET /events` - List all events (public)
-- GET /events/search` - Search events (public)
-- GET /events/{id}` - Get event details (public)
-- POST /events` - Create new event (requires auth)
-- PUT /events/{id}` - Update event (requires auth)
-- DELETE /events/{id}` - Delete event (requires auth)
+- GET `/events` - List all events (public)
+- GET `/events/search` - Search events (public)
+- GET `/events/{id}` - Get event details (public)
+- POST `/events` - Create new event (requires auth)
+- PUT `/events/{id}` - Update event (requires auth)
+- DELETE `/events/{id}` - Delete event (requires auth)
 
 Event Model:
 
@@ -107,14 +128,14 @@ Event Model:
 
 ### 🎟️ Tickets
 
-- GET /auth/tickets` - List user's tickets (requires auth)
-- GET /events/{eventId}/tickets` - List event tickets (requires auth)
-- POST /events/{eventId}/tickets` - Book ticket for event (requires auth)
-- GET /tickets/{ticketId}` - Get ticket details (requires auth)
-- PUT /tickets/{ticketId}` - Update ticket (requires auth)
-- POST /tickets/{ticketId}/verify` - Verify ticket (requires auth)
-- DELETE /events/{eventId}/tickets` - Cancel ticket (requires auth)
-- POST /check-in/tickets` - Check-in ticket (requires auth)
+- GET `/auth/tickets` - List user's tickets (requires auth)
+- GET `/events/{eventId}/tickets` - List event tickets (requires auth)
+- POST `/events/{eventId}/tickets` - Book ticket for event (requires auth)
+- GET `/tickets/{ticketId}` - Get ticket details (requires auth)
+- PUT `/tickets/{ticketId}` - Update ticket (requires auth)
+- POST `/tickets/{ticketId}/verify` - Verify ticket (requires auth)
+- DELETE `/events/{eventId}/tickets` - Cancel ticket (requires auth)
+- POST `/check-in/tickets` - Check-in ticket (requires auth)
 
 Ticket Model:
 
@@ -131,21 +152,20 @@ Ticket Model:
 
 ### 👥 Users
 
-- GET /users` - List users (requires auth)
-
-- GET /users/{id}` - Get user details (requires auth)
-- POST /users` - Create user (requires auth)
-- PUT /users/{id}` - Update user (requires auth)
-- PATCH /users/{id}` - Partial update user (requires auth)
-- DELETE /users/{id}` - Delete user (requires auth)
+- GET `/users` - List users (requires auth)
+- GET `/users/{id}` - Get user details (requires auth)
+- POST `/users` - Create user (requires auth)
+- PUT `/users/{id}` - Update user (requires auth)
+- PATCH `/users/{id}` - Partial update user (requires auth)
+- DELETE `/users/{id}` - Delete user (requires auth)
 
 ### 📁 File Uploads
 
-- POST /uploads` - Upload file (requires auth)
-- GET /uploads/{id}` - Get upload details (requires auth)
-- GET /uploads/image/{id}` - Get image (public)
-- DELETE /uploads/{id}` - Delete upload (requires auth)
-- DELETE /uploads` - Delete multiple uploads (requires auth)
+- POST `/uploads` - Upload file (requires auth)
+- GET `/uploads/{id}` - Get upload details (requires auth)
+- GET `/uploads/image/{id}` - Get image (public)
+- DELETE `/uploads/{id}` - Delete upload (requires auth)
+- DELETE `/uploads` - Delete multiple uploads (requires auth)
 
 ### 🔒 Authentication
 
@@ -173,8 +193,9 @@ Successful responses follow this format:
 ```json
 {
   "success": true,
-  "message: message,
+  "message": "message",
   "data": { ... }
 }
-
 ```
+
+
