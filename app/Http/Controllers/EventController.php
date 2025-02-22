@@ -15,10 +15,13 @@ class EventController extends Controller
     {
         try {
             if (! Auth::user()->hasPermission('events', 'create')) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => ['You do not have permission to create events'],
-                ], 403);
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => ['You do not have permission to create events'],
+                    ],
+                    403
+                );
             }
 
             if ($request->hasFile('image')) {
@@ -48,21 +51,27 @@ class EventController extends Controller
             $status = $request->input('status');
 
             if (! in_array($category, EventCategory::values())) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => [
-                        'category' => 'Invalid category. Available categories: '.implode(', ', EventCategory::values()),
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => [
+                            'category' => 'Invalid category. Available categories: '.implode(', ', EventCategory::values()),
+                        ],
                     ],
-                ], 422);
+                    422
+                );
             }
 
             if (! in_array($status, EventStatus::values())) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => [
-                        'status' => 'Invalid status. Available statuses: '.implode(', ', EventStatus::values()),
+                return response()->json(
+                    [
+                        'success' => false,
+                        'errors' => [
+                            'status' => 'Invalid status. Available statuses: '.implode(', ', EventStatus::values()),
+                        ],
                     ],
-                ], 422);
+                    422
+                );
             }
 
             $validated = $request->validate((new Event)->rules());
@@ -79,7 +88,6 @@ class EventController extends Controller
                 ],
                 201
             );
-
         } catch (\Exception $e) {
             \Log::error('Event creation error:', [
                 'error' => $e->getMessage(),
@@ -88,10 +96,13 @@ class EventController extends Controller
                 'request_data' => $request->all(),
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error creating event: '.$e->getMessage(),
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Error creating event: '.$e->getMessage(),
+                ],
+                500
+            );
         }
     }
 
@@ -191,12 +202,28 @@ class EventController extends Controller
                 $query->where('category', $request->category);
             }
 
-            if ($request->filled('search')) {
-                $searchTerm = '%'.$request->search.'%';
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->where('title', 'like', $searchTerm)
-                        ->orWhere('description', 'like', $searchTerm);
-                });
+            if ($request->filled('title')) {
+                $titleTerm = '%'.strtolower($request->title).'%';
+                $query->whereRaw('LOWER(title) LIKE ?', [$titleTerm]);
+            }
+
+            if ($request->filled('start_date')) {
+                $query->where('start_date', '>=', $request->start_date);
+            }
+
+            if ($request->filled('end_date')) {
+                $query->where('end_date', '<=', $request->end_date);
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('sort')) {
+                $sortDirection = $request->filled('sort_direction') ? $request->sort_direction : 'asc';
+                $query->orderBy($request->sort, $sortDirection);
+            } else {
+                $query->orderBy('created_at', 'desc');
             }
 
             $events = $query->paginate($request->input('per_page', 15));
@@ -214,10 +241,13 @@ class EventController extends Controller
         } catch (\Exception $e) {
             \Log::error('Search error: '.$e->getMessage());
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Error searching events',
-            ], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Error searching events',
+                ],
+                500
+            );
         }
     }
 }
