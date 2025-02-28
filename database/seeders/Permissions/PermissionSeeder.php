@@ -23,26 +23,62 @@ class PermissionSeeder extends Seeder
      */
     public function run()
     {
-        // Create roles
-        $adminRole = $this->aclService->createRole(ROLE_ENUM::ADMIN);
-        $organizerRole = $this->aclService->createRole(ROLE_ENUM::ORGANIZER);
-        $attendeeRole = $this->aclService->createRole(ROLE_ENUM::ATTENDEE);
+        $this->createRoles();
+        $this->createPermissions();
+        $this->assignPermissions();
+    }
 
-        // Create permissions for different entities
+    private function createRoles()
+    {
+        $this->adminRole = $this->aclService->createRole(ROLE_ENUM::ADMIN);
+        $this->organizerRole = $this->aclService->createRole(ROLE_ENUM::ORGANIZER);
+        $this->attendeeRole = $this->aclService->createRole(ROLE_ENUM::ATTENDEE);
+    }
+
+    private function createPermissions()
+    {
+        // Define CRUD permissions for each entity
         $this->aclService->createScopePermissions('users', ['create', 'read', 'update', 'delete']);
         $this->aclService->createScopePermissions('events', ['create', 'read', 'update', 'delete']);
+        $this->aclService->createScopePermissions('categories', ['create', 'read', 'update', 'delete']);
+    }
 
-        // Admin permissions (full access)
-        $this->aclService->assignScopePermissionsToRole($adminRole, 'users', ['create', 'read', 'update', 'delete']);
-        $this->aclService->assignScopePermissionsToRole($adminRole, 'events', ['create', 'read', 'update', 'delete']);
+    private function assignPermissions()
+    {
+        // Admin permissions
+        $this->aclService->assignScopePermissionsToRole($this->adminRole, 'users', [
+            'create',
+            'read',
+            'update',
+            'delete',
+        ]);
+        $this->aclService->assignScopePermissionsToRole($this->adminRole, 'events', [
+            'create',
+            'read',
+            'update',
+            'delete',
+        ]);
+        $this->aclService->assignScopePermissionsToRole($this->adminRole, 'categories', [
+            'create',
+            'read',
+            'update',
+            'delete',
+        ]);
 
         // Organizer permissions
-        $this->aclService->assignScopePermissionsToRole($organizerRole, 'events', ['create', 'read', 'update', 'delete']);
-        $this->aclService->assignScopePermissionsToRole($organizerRole, 'users', ['read']);
+        $this->aclService->assignScopePermissionsToRole($this->organizerRole, 'events', [
+            'create',
+            'read',
+            'update',
+            'delete',
+        ]);
+        $this->aclService->assignScopePermissionsToRole($this->organizerRole, 'users', ['read']);
+        $this->aclService->assignScopePermissionsToRole($this->organizerRole, 'categories', ['read']);
 
         // Attendee permissions
-        $this->aclService->assignScopePermissionsToRole($attendeeRole, 'events', ['read']);
-        $this->aclService->assignScopePermissionsToRole($attendeeRole, 'users', ['read']);
+        $this->aclService->assignScopePermissionsToRole($this->attendeeRole, 'events', ['read']);
+        $this->aclService->assignScopePermissionsToRole($this->attendeeRole, 'users', ['read']);
+        $this->aclService->assignScopePermissionsToRole($this->attendeeRole, 'categories', ['read']);
     }
 
     public function rollback()
@@ -54,8 +90,24 @@ class PermissionSeeder extends Seeder
         ])->get();
 
         foreach ($roles as $role) {
-            $this->aclService->removeScopePermissionsFromRole($role, 'users', ['create', 'read', 'update', 'delete']);
-            $this->aclService->removeScopePermissionsFromRole($role, 'events', ['create', 'read', 'update', 'delete']);
+            $this->aclService->removeScopePermissionsFromRole($role, 'users', [
+                'create',
+                'read',
+                'update',
+                'delete',
+            ]);
+            $this->aclService->removeScopePermissionsFromRole($role, 'events', [
+                'create',
+                'read',
+                'update',
+                'delete',
+            ]);
+            $this->aclService->removeScopePermissionsFromRole($role, 'categories', [
+                'create',
+                'read',
+                'update',
+                'delete',
+            ]);
         }
     }
 }

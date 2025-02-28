@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UploadController;
@@ -99,6 +100,17 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('check-in')->group(function () {
         Route::post('tickets', [TicketController::class, 'checkIn']);
     });
+
+    Route::prefix('categories')
+        ->name('categories.')
+        ->group(function () {
+            Route::controller(CategoryController::class)->group(function () {
+                Route::post('/', 'createOne');
+                Route::put('/{id}', 'updateOne');
+                Route::delete('/{id}', 'deleteOne');
+            });
+        });
+
 });
 
 // Public event routes
@@ -110,6 +122,12 @@ Route::prefix('events')
             Route::get('/{id}', 'readOne');
             Route::get('/', 'readAll');
         });
+    });
+
+Route::prefix('categories')
+    ->group(function () {
+        Route::get('/', [CategoryController::class, 'readAll']);
+        Route::get('/{id}', [CategoryController::class, 'readOne']);
     });
 
 Route::get('/hello', function () {

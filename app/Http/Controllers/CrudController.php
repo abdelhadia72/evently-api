@@ -21,7 +21,7 @@ use Illuminate\Validation\ValidationException;
  */
 abstract class CrudController extends Controller
 {
-    protected $restricted = ['create', 'read_one', 'read_all', 'update', 'delete'];
+    protected $restricted = ['create', 'update', 'delete'];
 
     abstract protected function getTable();
 
