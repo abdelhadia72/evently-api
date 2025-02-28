@@ -47,18 +47,35 @@ class EventController extends Controller
                 );
             }
 
-            $category = $request->input('category');
+            // changes
+            // get category from request
+            // $category = $request->input('category');
+            // if (!in_array($category, EventCategory::values())) {
+            //   return response()->json(
+            //     [
+            //       'success' => false,
+            //       'errors' => [
+            //         'category' =>
+            //           'Invalid category. Available categories: ' . implode(', ', EventCategory::values()),
+            //       ],
+            //     ],
+            //     422
+            //   );
+            // }
+            //
+            $categoryId = $request->input('category_id');
             $status = $request->input('status');
 
-            if (! in_array($category, EventCategory::values())) {
+            $category = \App\Models\Category::find($categoryId);
+            if (! $category) {
                 return response()->json(
                     [
                         'success' => false,
                         'errors' => [
-                            'category' => 'Invalid category. Available categories: '.implode(', ', EventCategory::values()),
+                            'category_id' => 'Invalid Category. Please Select A valid Category.',
                         ],
                     ],
-                    422
+                    403
                 );
             }
 
@@ -198,8 +215,8 @@ class EventController extends Controller
         try {
             $query = Event::query();
 
-            if ($request->filled('category')) {
-                $query->where('category', $request->category);
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->category_id);
             }
 
             if ($request->filled('title')) {

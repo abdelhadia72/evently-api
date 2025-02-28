@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\EventCategory;
 use App\Enums\EventStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +12,7 @@ class Event extends Model
 {
     use HasFactory, Notifiable;
 
-    protected $with = ['organizer'];
+    protected $with = ['organizer', 'category'];
 
     protected $fillable = [
         'title',
@@ -25,7 +24,7 @@ class Event extends Model
         'status',
         'max_attendees',
         'image_url',
-        'category',
+        'category_id',
     ];
 
     protected $casts = [
@@ -33,12 +32,16 @@ class Event extends Model
         'end_date' => 'datetime',
         'max_attendees' => 'integer',
         'status' => EventStatus::class,
-        'category' => EventCategory::class,
     ];
 
     public function organizer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'organizer_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function tickets()
@@ -69,7 +72,7 @@ class Event extends Model
             'max_attendees' => 'nullable|integer|min:1',
             'status' => 'required|string|in:'.implode(',', EventStatus::values()),
             'image_url' => 'nullable|string|url',
-            'category' => 'required|string|in:'.implode(',', EventCategory::values()),
+            'category_id' => 'required|exists:categories,id',
         ];
     }
 }

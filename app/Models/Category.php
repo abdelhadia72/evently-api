@@ -8,10 +8,12 @@ class Category extends Model
 {
     public static $cacheKey = 'categories';
 
-    protected $fillable = [
-        'name',
-        'description',
-    ];
+    protected $fillable = ['name', 'description'];
+
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
 
     public function rules()
     {
