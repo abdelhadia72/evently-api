@@ -140,7 +140,14 @@ class EventController extends Controller
 
     public function readOne(Request $request, $id)
     {
-        $event = Event::findOrFail($id);
+        $event = Event::with('category')->find($id);
+
+        if (! $event) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['Event not found'],
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,
@@ -168,6 +175,7 @@ class EventController extends Controller
         $validated = $request->validate((new Event)->rules($id));
 
         $event->update($validated);
+        $event = Event::with('category')->findOrFail($id);
 
         return response()->json([
             'success' => true,
