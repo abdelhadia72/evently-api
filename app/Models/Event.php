@@ -75,4 +75,27 @@ class Event extends Model
             'category_id' => 'required|exists:categories,id',
         ];
     }
+
+    public function ticketTypes()
+    {
+        return $this->hasMany(TicketType::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function totalAvailableTickets()
+    {
+        $availableTickets = 0;
+
+        foreach ($this->ticketTypes as $ticketType) {
+            if ($ticketType->is_active) {
+                $availableTickets += $ticketType->availableQuantity();
+            }
+        }
+
+        return $availableTickets;
+    }
 }

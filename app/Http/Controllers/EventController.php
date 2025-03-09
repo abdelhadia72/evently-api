@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\EventCategory;
 use App\Enums\EventStatus;
 use App\Models\Event;
 use Illuminate\Http\Request;
@@ -46,23 +45,6 @@ class EventController extends Controller
                     403
                 );
             }
-
-            // changes
-            // get category from request
-            // $category = $request->input('category');
-            // if (!in_array($category, EventCategory::values())) {
-            //   return response()->json(
-            //     [
-            //       'success' => false,
-            //       'errors' => [
-            //         'category' =>
-            //           'Invalid category. Available categories: ' . implode(', ', EventCategory::values()),
-            //       ],
-            //     ],
-            //     422
-            //   );
-            // }
-            //
             $categoryId = $request->input('category_id');
             $status = $request->input('status');
 
@@ -140,7 +122,12 @@ class EventController extends Controller
 
     public function readOne(Request $request, $id)
     {
-        $event = Event::with('category')->find($id);
+        $event = Event::with([
+            'category',
+            'ticketTypes',
+            'tickets.ticketType',
+            'tickets.user',
+        ])->find($id);
 
         if (! $event) {
             return response()->json([

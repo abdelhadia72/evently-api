@@ -14,20 +14,33 @@ class TicketPolicy
     public function viewAny(User $user, Event $event)
     {
         return $user->id === $event->organizer_id ||
-               $user->hasPermission('tickets', 'read') ||
-               $event->tickets()->where('user_id', $user->id)->exists();
+            $user->hasPermission('tickets', 'read') ||
+            $event->tickets()->where('user_id', $user->id)->exists();
     }
 
     public function view(User $user, Ticket $ticket)
     {
-        return $user->id === $ticket->user_id ||
-               $user->id === $ticket->event->organizer_id ||
-               $user->hasPermission('tickets', 'read');
+        if ($user->is_admin) {
+            return true;
+        }
+
+        if ($user->id === $ticket->user_id) {
+            return true;
+        }
+
+        if ($user->id === $ticket->event->organizer_id) {
+            return true;
+        }
+
+        return false;
+        // return $user->id === $ticket->user_id ||
+        //        $user->id === $ticket->event->organizer_id ||
+        //    $user->hasPermission('tickets', 'read');
     }
 
     public function create(User $user, Event $event)
     {
-        return true; // Allow all authenticated users to book tickets
+        return true;
     }
 
     public function checkIn(User $user, Ticket $ticket)
@@ -42,7 +55,6 @@ class TicketPolicy
 
     public function delete(User $user, ?Ticket $ticket = null, ?Event $event = null)
     {
-        // User can cancel their own tickets or if they're admin
         return $user->id === $ticket->user_id || $user->is_admin;
     }
 }

@@ -12,10 +12,8 @@ class BaseModel extends Model
     use HasDataTables;
     use HasRelationsMethods;
 
-    // Abstract static property "cacheKey" must be defined in child class
     public static $cacheKey;
 
-    // Can be overridden in child class to prevent auto uploads deletion
     protected bool $deleteUploads = true;
 
     protected static function booted()
